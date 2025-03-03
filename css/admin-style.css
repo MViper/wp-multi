@@ -1,0 +1,193 @@
+/* Allgemeines Styling für die Admin-Seite */
+.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+.wrap h1 {
+    font-size: 28px;
+    color: #333;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+}
+
+/* Logo */
+/* Blaues Banner hinter dem Logo */
+.statistik-manager-logo {
+    text-align: center;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, #0073aa, #00c6ff); /* Blaues Farbverlauf-Banner */
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* Logo im Banner */
+.statistik-manager-logo img {
+    max-width: 200px;
+    display: block;
+    margin: 0 auto;
+}
+
+
+/* Container, der die Statistikoptionen und die Werbung nebeneinander anordnet */
+.statistik-manager-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: stretch; /* Stellt sicher, dass beide Boxen die gleiche Höhe haben */
+}
+
+/* Linke Spalte – Statistik-Einstellungen (größerer Bereich) */
+.statistik-manager-settings {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Titel in der Auswahlbox "Statistiken anzeigen" */
+.statistik-manager-settings h2 {
+    font-size: 22px;
+    color: #0073aa;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #0073aa;
+}
+
+/* Rechte Spalte – Werbung für weitere Plugins (kleinerer Bereich) */
+.statistik-manager-advertisement {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    height: fit-content;
+    margin-top: 80px; /* Größerer Abstand nach oben */
+}
+
+/* Werbung – Überschrift */
+.statistik-manager-advertisement h2 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+/* Werbung – Liste */
+.statistik-manager-advertisement ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.statistik-manager-advertisement ul li {
+    margin-bottom: 12px;
+}
+
+.statistik-manager-advertisement ul li a {
+    font-size: 16px;
+    color: #0073aa;
+    text-decoration: none;
+    transition: color 0.3s ease, transform 0.3s ease;
+    display: inline-block;
+}
+
+.statistik-manager-advertisement ul li a:hover {
+    color: #005177;
+    transform: translateX(5px);
+}
+
+/* Formular-Tabelle für die Einstellungen */
+.form-table {
+    width: 100%;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 25px 35px;
+    margin-bottom: 30px;
+}
+
+.form-table th {
+    font-size: 16px;
+    color: #444;
+    padding-bottom: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-table td {
+    font-size: 15px;
+    color: #666;
+    padding: 8px 0;
+}
+
+/* Submit-Button */
+button.submit, .submit {
+    font-size: 12px; /* Kleinere Schriftgröße */
+    cursor: pointer;
+}
+
+/* Zusätzlicher Abstand nach links für den Text in der Tabellenüberschrift */
+.form-table th {
+    padding-left: 30px; /* Erhöht den Abstand nach links */
+}
+
+.statistik-manager-banner {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.statistik-manager-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Abstand zwischen den Boxen */
+}
+
+.statistik-manager-plugins, 
+.statistik-manager-advertisement {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.statistik-manager-plugins h3, 
+.statistik-manager-advertisement h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.statistik-manager-plugins ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.statistik-manager-plugins ul li {
+    margin-bottom: 10px;
+}
+
+.statistik-manager-plugins ul li a {
+    text-decoration: none;
+    color: #0073aa;
+    font-weight: 500;
+}
+
+.statistik-manager-plugins ul li a:hover {
+    color: #005077;
+}

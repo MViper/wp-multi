@@ -1,0 +1,136 @@
+/* Stil für die Statistikübersicht */
+.statistik-manager {
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.statistik-manager h3 {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 20px;
+	text-align: center;
+}
+
+.statistik-items {
+    display: flex;
+    justify-content: space-between;
+}
+
+.stat-item {
+    width: 23%;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-item i {
+    font-size: 2em;
+    color: #333;
+}
+
+.stat-item p {
+    font-size: 1.2em;
+    margin: 5px 0;
+}
+
+.stat-item strong {
+    font-weight: bold;
+}
+
+/* Box für das Eröffnungsdatum */
+.stat-opening-date {
+    background: #ffffff;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Allgemeine Stile für das Plugin */
+.statistik-manager-bookmarks {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.statistik-manager-bookmarks h3 {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.statistik-manager-bookmarks ul {
+    list-style: none;
+    padding: 0;
+}
+
+.statistik-manager-bookmarks ul li {
+    background-color: #fff;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.statistik-manager-bookmarks ul li a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.statistik-manager-bookmarks ul li a:hover {
+    text-decoration: underline;
+}
+
+.delete-bookmark-btn {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.delete-bookmark-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Formularstile */
+.form-field {
+    margin-bottom: 15px;
+}
+
+.form-field label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-field input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+}
+
+.form-field button {
+    padding: 10px 15px;
+    background-color: #007cba;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.form-field button:hover {
+    background-color: #005f8e;
+}

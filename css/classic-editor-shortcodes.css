@@ -1,0 +1,14 @@
+/* Stil für das Dropdown-Menü in der Editor-Toolbar */
+.mce-icon.mce_classic_shortcode_button {
+    background-color: #0073aa;
+    color: white;
+    border-radius: 3px;
+    padding: 5px;
+    font-weight: bold;
+}
+
+/* Optional: Stil für das Menü */
+.mce-menu-item {
+    font-size: 14px;
+    padding: 5px;
+}
