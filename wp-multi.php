@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WP Multi
  * Plugin URI: https://git.viper.ipv64.net/M_Viper/wp-multi
- * Description: Zeigt eine Statistik, ein anpassbares Banner, eigene Admin-Menü-Links, Telegram-Benachrichtigungen und eine Meldefunktion für Beiträge an.
- * Version: 2.0
+ * Description: Erweiterter Anti-Spam-Schutz mit Honeypot, Keyword-Filter, Link-Limit und mehr. Jetzt mit Statistik im Dashboard und HappyForms-Integration.
+ * Version: 2.4
  * Author: M_Viper
  * Author URI: https://m-viper.de
  * Requires at least: 6.7.2
@@ -11,10 +11,929 @@
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wp-multi
- * Tags: statistik, banner, wordpress, telegram, report
+ * Tags: anti-spam, security, honeypot, comment-protection, statistics, happyforms
  */
 
-if ( !defined('ABSPATH') ) exit;
+if (!defined('ABSPATH')) exit;
+
+
+
+/*
+* Index Verzeichnis [alphabetical_index]
+*/
+
+
+// Shortcode zum Erstellen des Indexes
+function wp_multi_alphabetical_index($atts) {
+    // Definiere die Argumente für den Shortcode
+    $atts = shortcode_atts(array(
+        'posts_per_page' => 20, // Maximale Beiträge pro Seite
+    ), $atts, 'alphabetical_index');
+
+    // Hole alle Beiträge
+    $args = array(
+        'post_type' => 'post',
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+    );
+
+    $posts = get_posts($args);
+
+    // Beiträge nach Anfangsbuchstaben gruppieren
+    $alphabet = range('A', 'Z');
+    $posts_by_letter = array();
+
+    foreach ($posts as $post) {
+        $first_letter = strtoupper(substr($post->post_title, 0, 1));
+        if (in_array($first_letter, $alphabet)) {
+            $posts_by_letter[$first_letter][] = $post;
+        }
+    }
+
+    // Holen des aktuellen Buchstabens aus der URL
+    $letter = isset($_GET['letter']) ? strtoupper($_GET['letter']) : ''; // Der Buchstabe aus der URL
+
+    // Bestimme, welche Beiträge angezeigt werden
+    $posts_in_letter = [];
+    if ($letter && isset($posts_by_letter[$letter])) {
+        $posts_in_letter = $posts_by_letter[$letter];
+    }
+
+    // Teile die Beiträge in zwei Hälften für die Boxen
+    $halfway = ceil(count($posts_in_letter) / 2); // Rundet die Hälfte auf
+    $first_half = array_slice($posts_in_letter, 0, $halfway); // Erste Hälfte der Beiträge
+    $second_half = array_slice($posts_in_letter, $halfway); // Zweite Hälfte der Beiträge
+
+    // Ausgabe
+    ob_start();
+    ?>
+
+    <div class="alphabetical-index">
+        <!-- Links zu den Buchstaben -->
+        <div class="alphabet-links">
+            <?php foreach ($alphabet as $char): ?>
+                <a href="?letter=<?php echo $char; ?>" class="letter-link"><?php echo $char; ?></a>
+            <?php endforeach; ?>
+        </div>
+
+        <?php if ($letter): ?>
+            <!-- Box für den aktuellen Buchstaben -->
+            <div class="letter-heading-box">
+                <h2>Beiträge für: <?php echo $letter; ?></h2>
+            </div>
+
+            <!-- Zeige die Beiträge für den ausgewählten Buchstaben in zwei Boxen -->
+            <div class="letter-pair-container">
+                <div class="letter-box">
+                    <ul class="post-list">
+                        <?php foreach ($first_half as $post): ?>
+                            <li><a href="<?php echo get_permalink($post->ID); ?>"><?php echo $post->post_title; ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+
+                <div class="letter-box">
+                    <ul class="post-list">
+                        <?php foreach ($second_half as $post): ?>
+                            <li><a href="<?php echo get_permalink($post->ID); ?>"><?php echo $post->post_title; ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <style>
+    .alphabetical-index {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
+
+    .alphabet-links {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .alphabet-links a {
+        margin-right: 10px;
+        font-size: 18px;
+        text-decoration: none;
+        color: #0073aa;
+    }
+
+    .alphabet-links a:hover {
+        text-decoration: underline;
+    }
+
+    .letter-heading-box {
+        margin-bottom: 20px;
+        background-color: #f0f0f0;
+        padding: 20px;
+        text-align: center;
+        border-radius: 8px;
+    }
+
+    .letter-heading-box h2 {
+        font-size: 24px;
+        margin: 0;
+    }
+
+    .letter-pair-container {
+        display: flex;
+        gap: 30px;
+        justify-content: space-between;
+    }
+
+    .letter-box {
+        width: 48%;
+        background-color: #f0f0f0;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .letter-box h2 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .post-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .post-list li {
+        margin-bottom: 5px;
+    }
+
+    .post-list a {
+        text-decoration: none;
+        color: #333;
+    }
+
+    .post-list a:hover {
+        text-decoration: underline;
+    }
+    </style>
+
+    <?php
+    return ob_get_clean();
+}
+
+// Shortcode registrieren
+add_shortcode('alphabetical_index', 'wp_multi_alphabetical_index');
+
+
+/*
+* Sperre Trash Mail Adressen
+*/
+
+
+// Funktion zum Laden der Liste von Einweg-Mail-Anbietern
+function load_disposable_email_list() {
+    $file_path = plugin_dir_path(__FILE__) . 'includes/disposable_email_blocklist.conf'; // Pfad zur Datei im includes-Ordner
+    if (file_exists($file_path)) {
+        return file($file_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    }
+    return [];
+}
+
+// Funktion zum Überprüfen der E-Mail-Adresse eines Kommentators
+function check_disposable_email($commentdata) {
+    $disposable_list = load_disposable_email_list();
+    $email = $commentdata['comment_author_email'];
+    $domain = substr(strrchr($email, "@"), 1); // Nur die Domain extrahieren
+
+    // Überprüfen, ob die Domain auf der Liste steht
+    if (in_array($domain, $disposable_list)) {
+        wp_die(__('Fehler: Trash-Mail-Adressen sind in Kommentaren nicht erlaubt.'));
+    }
+
+    return $commentdata;
+}
+
+// Die Funktion wird beim Absenden eines Kommentars ausgeführt
+add_filter('preprocess_comment', 'check_disposable_email');
+
+ 
+/*
+* Text Copy Schutz und Schutz vor Entwicklertools
+*/
+
+
+// JavaScript für die Kopierschutz-Funktion einbinden
+function wp_multi_enqueue_scripts() {
+    wp_add_inline_script('jquery', "
+        jQuery(document).ready(function($) {
+            // Verhindert das Öffnen der Entwicklertools mit F12, Strg+Shift+I und Strg+Shift+C
+            $(document).keydown(function(e) {
+                // Blockiert F12, Strg + Shift + I, Strg + Shift + C (Entwicklertools)
+                if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.shiftKey && e.keyCode == 67)) {
+                    e.preventDefault();
+                }
+
+                // Verhindert das Öffnen des Quellcodes mit Strg + U (view-source)
+                if ((e.ctrlKey && e.keyCode == 85) || (e.ctrlKey && e.shiftKey && e.keyCode == 85)) {
+                    e.preventDefault();
+                }
+
+                // Verhindert den Zugriff auf die Konsole mit Strg + Shift + J (Konsole-Tab)
+                if ((e.ctrlKey && e.shiftKey && e.keyCode == 74) || (e.metaKey && e.altKey && e.keyCode == 74)) {
+                    e.preventDefault();
+                }
+
+                // Verhindert das Öffnen des Quellcodes mit view-source
+                if (e.ctrlKey && e.keyCode == 85) {
+                    e.preventDefault();
+                }
+            });
+
+            // Verhindert das Öffnen des Kontextmenüs (Rechtsklick)
+            $('body').on('contextmenu', function(e) {
+                e.preventDefault();
+            });
+
+            // Kopierschutz-Funktion
+            $('body').on('copy', function(e) {
+                e.preventDefault();
+                var selectedText = window.getSelection().toString();
+                var numericText = selectedText.replace(/./g, function(char) {
+                    return Math.floor(Math.random() * 10);
+                });
+                
+                e.originalEvent.clipboardData.setData('text/plain', numericText);
+            });
+        });
+    ");
+}
+add_action('wp_enqueue_scripts', 'wp_multi_enqueue_scripts');
+
+
+/*
+* Login deaktivieren
+*/
+
+
+// Checkbox zum Benutzerprofil hinzufügen
+function wp_multi_add_disable_login_checkbox($user) {
+    ?>
+    <h3>Login deaktivieren</h3>
+    <table class="form-table">
+        <tr>
+            <th><label for="disable_login">Login deaktivieren</label></th>
+            <td>
+                <input type="checkbox" name="disable_login" id="disable_login" value="1" <?php checked( get_user_meta($user->ID, 'disable_login', true), 1 ); ?> />
+                <span class="description">Markiere diese Option, um den Login des Benutzers zu deaktivieren.</span>
+            </td>
+        </tr>
+    </table>
+    <?php
+}
+
+// Speichern der Checkbox-Option
+function wp_multi_save_disable_login_checkbox($user_id) {
+    if ( isset( $_POST['disable_login'] ) ) {
+        update_user_meta( $user_id, 'disable_login', 1 );
+    } else {
+        delete_user_meta( $user_id, 'disable_login' );
+    }
+}
+
+// Die Checkbox in das Benutzerprofil einfügen
+add_action( 'show_user_profile', 'wp_multi_add_disable_login_checkbox' );
+add_action( 'edit_user_profile', 'wp_multi_add_disable_login_checkbox' );
+
+// Speichern der Checkbox-Option
+add_action( 'personal_options_update', 'wp_multi_save_disable_login_checkbox' );
+add_action( 'edit_user_profile_update', 'wp_multi_save_disable_login_checkbox' );
+
+// Login blockieren, wenn die Checkbox aktiviert ist
+function wp_multi_block_login_if_disabled($user_login, $user) {
+    // Prüfen, ob der Benutzer das Flag "Login deaktivieren" gesetzt hat
+    if ( get_user_meta( $user->ID, 'disable_login', true ) ) {
+        // Fehlermeldung anzeigen, wenn der Login deaktiviert ist
+        wp_die( 'Dein Login wurde deaktiviert. Bitte kontaktiere den Administrator.' );
+    }
+}
+
+// Der Filter wird bei jedem Login-Versuch angewendet
+add_action( 'wp_login', 'wp_multi_block_login_if_disabled', 10, 2 );
+ 
+ 
+/*
+* Auto Tag
+*/
+
+
+// Automatische Tags zu Beiträgen hinzufügen
+function wp_multi_auto_add_tags($post_id) {
+    if (get_post_type($post_id) !== 'post' || wp_is_post_revision($post_id)) return;
+
+    $existing_tags = wp_get_post_tags($post_id, ['fields' => 'names']);
+    if (!empty($existing_tags)) return;
+
+    $post = get_post($post_id);
+    $content = strip_tags($post->post_content);
+    $content = strtolower($content);
+
+    // Stopwörter aus der Admin-Eingabe holen
+    $custom_stopwords = get_option('wp_multi_custom_stopwords', '');
+    $custom_stopwords = array_map('trim', explode(',', $custom_stopwords)); // In ein Array umwandeln
+
+    // Standard-Stopwörter
+    $default_stopwords = ['und', 'oder', 'ein', 'eine', 'der', 'die', 'das', 'in', 'mit', 'auf', 'zu', 'von', 
+                          'für', 'ist', 'es', 'im', 'an', 'am', 'bei', 'auch', 'aber', 'so', 'dass', 'kann', 
+                          'wenn', 'wie', 'wir', 'man', 'nur', 'nicht', 'mehr', 'als', 'sein', 'wurde', 'werden', 
+                          'hat', 'haben', 'schon', 'doch', 'denn', 'diese', 'dieser', 'dieses', 'nach', 'sehr', 'Allgemein'];
+
+    // Alle Stopwörter (standard und benutzerdefiniert)
+    $stopwords = array_merge($default_stopwords, $custom_stopwords);
+
+    preg_match_all('/\b[a-zäöüß]{4,}\b/u', $content, $matches);
+    $words = array_unique(array_diff($matches[0], $stopwords));
+
+    $word_counts = array_count_values($words);
+    arsort($word_counts);
+
+    $top_tags = array_slice(array_keys($word_counts), 0, 5);
+    if (!empty($top_tags)) {
+        wp_set_post_tags($post_id, implode(',', $top_tags), true);
+    }
+}
+
+// Menüeintrag für Automatische Tags
+function wp_multi_admin_menu() {
+    add_submenu_page(
+        'edit.php',
+        'Automatische Tags',
+        'Automatische Tags',
+        'manage_options',
+        'wp-multi-auto-tags',
+        'wp_multi_auto_tags_page'
+    );
+}
+add_action('admin_menu', 'wp_multi_admin_menu');
+
+// Menüseite mit Banner & schöner Progress Bar
+function wp_multi_auto_tags_page() {
+    ?>
+    <div class="wrap">
+        <!-- Blauer Header mit Logo -->
+        <div class="wp-multi-header">
+            <img src="https://m-viper.de/img/logo.png" alt="M_Viper Logo">
+            <h1>Automatische Tags</h1>
+        </div>
+
+        <p class="wp-multi-description">Diese Funktion fügt automatisch Tag zu Beiträgen hinzu, die noch keine haben.</p>
+
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('wp_multi_auto_tags_options');
+            do_settings_sections('wp-multi-auto-tags');
+            ?>
+            <p>
+                <label for="wp_multi_custom_stopwords">Benutzerdefinierte Tags die nicht genutzt werden sollten (kommagetrennt):</label><br>
+                <textarea id="wp_multi_custom_stopwords" name="wp_multi_custom_stopwords" rows="5" cols="50"><?php echo esc_textarea(get_option('wp_multi_custom_stopwords', '')); ?></textarea>
+                <br>
+                <small>Trenne die Wörter durch Kommas, z. B. "wird, auch, aber".</small>
+            </p>
+            <p><input type="submit" value="Speichern" class="button button-primary"></p>
+        </form>
+
+        <button id="start-auto-tags" class="button button-primary wp-multi-btn">Jetzt ausführen</button>
+
+        <div id="progress-container" class="wp-multi-progress-container">
+            <div id="progress-bar" class="wp-multi-progress-bar">0%</div>
+        </div>
+
+        <p id="status-message" class="wp-multi-status-message"></p>
+    </div>
+
+    <style>
+    /* Header */
+    .wp-multi-header {
+        background: #0073aa;
+        color: white;
+        text-align: center;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .wp-multi-header img {
+        max-width: 120px;
+        margin-bottom: 15px;
+    }
+    .wp-multi-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    /* Beschreibung */
+    .wp-multi-description {
+        font-size: 18px;
+        margin-bottom: 25px;
+        color: #555;
+    }
+
+    /* Button */
+    .wp-multi-btn {
+        background: #0073aa;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .wp-multi-btn:hover {
+        background: #005f8a;
+        transform: translateY(-2px);
+    }
+    .wp-multi-btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Stopwort Textarea */
+    textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        font-size: 16px;
+        line-height: 1.5;
+        box-sizing: border-box;
+    }
+    label {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+    small {
+        font-size: 14px;
+        color: #888;
+    }
+
+    /* Fortschrittsbalken */
+    .wp-multi-progress-container {
+        display: none;
+        width: 100%;
+        background: #f4f4f4;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+    .wp-multi-progress-bar {
+        width: 0%;
+        height: 30px;
+        background:rgb(45, 168, 7);
+        text-align: center;
+        color: white;
+        line-height: 30px;
+        font-weight: bold;
+        transition: width 0.4s ease-in-out;
+        border-radius: 5px;
+    }
+
+    /* Status Nachricht */
+    .wp-multi-status-message {
+        margin-top: 15px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #0073aa;
+    }
+
+    /* Formularbereich */
+    form {
+        margin-bottom: 25px;
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+</style>
+
+
+    <script>
+        document.getElementById("start-auto-tags").addEventListener("click", function() {
+            let button = this;
+            button.disabled = true;
+            button.innerText = "Wird verarbeitet...";
+            
+            let progressContainer = document.getElementById("progress-container");
+            let progressBar = document.getElementById("progress-bar");
+            let statusMessage = document.getElementById("status-message");
+
+            progressContainer.style.display = "block";
+            progressBar.style.width = "0%";
+            progressBar.innerText = "0%";
+            statusMessage.innerText = "Lade...";
+
+            fetch(ajaxurl, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "action=wp_multi_process_auto_tags"
+            })
+            .then(response => response.json())
+            .then(data => {
+                let total = data.total;
+                let processed = 0;
+                let batchSize = 10;
+
+                function updateProgress() {
+                    fetch(ajaxurl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: "action=wp_multi_process_auto_tags_step&batchSize=" + batchSize
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.done) {
+                            processed += batchSize;
+                            let percent = Math.round((processed / total) * 100);
+                            progressBar.style.width = percent + "%";
+                            progressBar.innerText = percent + "%";
+
+                            if (processed < total) {
+                                updateProgress();
+                            } else {
+                                button.innerText = "Jetzt ausführen";
+                                button.disabled = false;
+                                statusMessage.innerText = "Automatische Tags wurden erfolgreich hinzugefügt!";
+                            }
+                        }
+                    });
+                }
+                updateProgress();
+            });
+        });
+    </script>
+    <?php
+}
+
+// Einstellungen registrieren
+function wp_multi_auto_tags_settings_init() {
+    register_setting('wp_multi_auto_tags_options', 'wp_multi_custom_stopwords');
+}
+add_action('admin_init', 'wp_multi_auto_tags_settings_init');
+
+// AJAX-Aufrufe für schnelle Verarbeitung
+add_action('wp_ajax_wp_multi_process_auto_tags', 'wp_multi_process_auto_tags');
+function wp_multi_process_auto_tags() {
+    $args = ['post_type' => 'post', 'posts_per_page' => -1, 'fields' => 'ids'];
+    $posts = get_posts($args);
+    
+    set_transient('wp_multi_auto_tags_queue', $posts, 300);
+    
+    wp_send_json(['total' => count($posts)]);
+}
+
+add_action('wp_ajax_wp_multi_process_auto_tags_step', 'wp_multi_process_auto_tags_step');
+function wp_multi_process_auto_tags_step() {
+    $queue = get_transient('wp_multi_auto_tags_queue');
+    $batchSize = isset($_POST['batchSize']) ? intval($_POST['batchSize']) : 10;
+
+    if (!$queue || empty($queue)) {
+        wp_send_json(['done' => false]);
+    }
+
+    $posts_to_process = array_splice($queue, 0, $batchSize);
+    
+    foreach ($posts_to_process as $post_id) {
+        wp_multi_auto_add_tags($post_id);
+    }
+
+    set_transient('wp_multi_auto_tags_queue', $queue, 300);
+    
+    wp_send_json(['done' => true]);
+}
+
+
+/*
+* Admin - Panel Banner 
+*/
+
+
+// Admin-Banner als Notice mit Blauem Hintergrund (#0073aa)
+function wp_multi_add_warning_banner() {
+    echo '
+    <div class="notice notice-warning is-dismissible" style="background-color: #0073aa; color: white; border-left: 4px solid #005177;">
+        <p><strong>Danke, dass du WP Multi verwendest!</strong> Dein Feedback hilft uns, das Plugin ständig zu verbessern. Wenn du Fehler entdeckst oder Verbesserungsvorschläge hast, besuche bitte unsere <a href="https://git.viper.ipv64.net/M_Viper/wp-multi" target="_blank" style="color: #FFDD00; text-decoration: none;">Gitea-Seite</a> und teile uns deine Ideen mit!</p>
+    </div>';
+}
+add_action('admin_notices', 'wp_multi_add_warning_banner');
+
+
+/*
+* Anti Spam Honey 
+*/
+
+
+// Standardwerte setzen
+function wp_multi_set_default_options() {
+    add_option('wp_multi_honeypot_field', 'iwlxja5187');
+    add_option('wp_multi_honeypot_error', 'Spamming or your Javascript is disabled !!');
+    add_option('wp_multi_honeypot_widget', 0);
+    add_option('wp_multi_max_links', 3);
+    add_option('wp_multi_blocked_keywords', 'viagra,casino,bitcoin');
+    add_option('wp_multi_blocked_ips', '');
+    add_option('wp_multi_blocked_comments', 0); // Zähler für blockierte Kommentare
+    add_option('wp_multi_honeypot_hits', 0); // Zähler für Honeypot-Aktivierungen
+    add_option('wp_multi_spammer_ips', []); // Liste der blockierten Spammer-IP-Adressen
+    add_option('wp_multi_spam_submissions', []); // Liste der Spam-Einreichungen
+}
+register_activation_hook(__FILE__, 'wp_multi_set_default_options');
+
+// Menüpunkt "Sicherheit" und Statistik hinzufügen
+function wp_multi_add_security_menu() {
+    add_menu_page(
+        'Sicherheit', 
+        'Sicherheit', 
+        'manage_options', 
+        'wp-multi-security', 
+        'wp_multi_security_settings_page', 
+        'dashicons-shield', 
+        80
+    );
+    add_submenu_page(
+        'wp-multi-security', 
+        'WP Multi Statistik', 
+        'WP Multi Statistik', 
+        'manage_options', 
+        'wp-multi-statistics', 
+        'wp_multi_statistics_page'
+    );
+}
+add_action('admin_menu', 'wp_multi_add_security_menu');
+
+// Einstellungsseite mit CSS & JS für Generator
+function wp_multi_security_settings_page() {
+    ?>
+    <div class="wp-multi-security-wrap">
+        <div class="wp-multi-banner">
+            <img src="https://m-viper.de/img/logo.png" alt="WP Multi Logo">
+            <h1>WP Multi - Anti Spam</h1>
+        </div>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('wp_multi_security_settings');
+            do_settings_sections('wp-multi-security');
+            submit_button();
+            ?>
+        </form>
+    </div>
+    <script>
+        function generateHoneypotName() {
+            let field = document.getElementById('wp_multi_honeypot_field');
+            let randomString = Math.random().toString(36).substring(2, 12);
+            field.value = randomString;
+        }
+    </script>
+    <style>
+        .wp-multi-security-wrap {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .wp-multi-banner {
+            background: #0073aa;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            color: #fff;
+        }
+        .wp-multi-banner img {
+            max-height: 50px;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .wp-multi-banner h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .wp-multi-honeypot-group {
+            display: flex;
+            align-items: center;
+        }
+        .wp-multi-honeypot-group input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        button {
+            cursor: pointer;
+            background: #0073aa;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #005f88;
+        }
+    </style>
+    <?php
+}
+
+// Statistikseite im Dashboard
+function wp_multi_statistics_page() {
+    $blocked_comments = get_option('wp_multi_blocked_comments', 0);
+    $honeypot_hits = get_option('wp_multi_honeypot_hits', 0);
+    $spammer_ips = get_option('wp_multi_spammer_ips', []);
+    $spam_submissions = get_option('wp_multi_spam_submissions', []);
+    
+    ?>
+    <div class="wrap wp-multi-statistics-wrap">
+        <div class="wp-multi-banner">
+            <img src="https://m-viper.de/img/logo.png" alt="WP Multi Logo">
+            <h1>WP Multi - Anti Spam Statistik</h1>
+        </div>
+
+        <div class="wp-multi-statistics">
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th>Statistik</th>
+                        <th>Wert</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Blockierte Kommentare</td>
+                        <td><?php echo $blocked_comments; ?></td>
+                    </tr>
+                    <tr>
+                        <td>Aktivierte Honeypot-Felder</td>
+                        <td><?php echo $honeypot_hits; ?></td>
+                    </tr>
+                    <tr>
+                        <td>Spammer-IP-Adressen</td>
+                        <td><?php echo count($spammer_ips); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Spam-Einreichungen</td>
+                        <td><?php echo count($spam_submissions); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Spammer-IP-Adressen</h2>
+            <?php if (!empty($spammer_ips)): ?>
+                <ul class="wp-multi-spammer-ips">
+                    <?php foreach ($spammer_ips as $ip): ?>
+                        <li><?php echo esc_html($ip); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p>Keine Spammer-IP-Adressen gefunden.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <style>
+        .wp-multi-statistics-wrap {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .wp-multi-banner {
+            background: #0073aa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            color: #fff;
+        }
+
+        .wp-multi-banner img {
+            max-height: 60px;
+            display: block;
+            margin: 0 auto 10px;
+        }
+
+        .wp-multi-banner h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .wp-multi-statistics table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        .wp-multi-statistics th,
+        .wp-multi-statistics td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .wp-multi-statistics th {
+            background-color: #0073aa;
+            color: #fff;
+        }
+
+        .wp-multi-statistics tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .wp-multi-spammer-ips {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .wp-multi-spammer-ips li {
+            padding: 5px;
+            background-color: #f1f1f1;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+    </style>
+    <?php
+}
+
+
+// Einstellungen registrieren
+function wp_multi_register_security_settings() {
+    register_setting('wp_multi_security_settings', 'wp_multi_honeypot_field');
+    register_setting('wp_multi_security_settings', 'wp_multi_honeypot_error');
+    register_setting('wp_multi_security_settings', 'wp_multi_honeypot_widget');
+    register_setting('wp_multi_security_settings', 'wp_multi_max_links');
+    register_setting('wp_multi_security_settings', 'wp_multi_blocked_keywords');
+    register_setting('wp_multi_security_settings', 'wp_multi_blocked_ips');
+
+    add_settings_section('wp_multi_honeypot_section', 'Honeypot Einstellungen', null, 'wp-multi-security');
+
+    add_settings_field('wp_multi_honeypot_field', 'Honey Pot Field Name', 'wp_multi_honeypot_field_callback', 'wp-multi-security', 'wp_multi_honeypot_section');
+    add_settings_field('wp_multi_honeypot_error', 'Honey Pot Error Message', 'wp_multi_honeypot_error_callback', 'wp-multi-security', 'wp_multi_honeypot_section');
+    add_settings_field('wp_multi_honeypot_widget', 'Disable Honeypot Test Widget', 'wp_multi_honeypot_widget_callback', 'wp-multi-security', 'wp_multi_honeypot_section');
+    add_settings_field('wp_multi_max_links', 'Maximale Links im Kommentar', 'wp_multi_max_links_callback', 'wp-multi-security', 'wp_multi_honeypot_section');
+    add_settings_field('wp_multi_blocked_keywords', 'Blockierte Schlüsselwörter', 'wp_multi_blocked_keywords_callback', 'wp-multi-security', 'wp_multi_honeypot_section');
+    add_settings_field('wp_multi_blocked_ips', 'Blockierte IP-Adressen', 'wp_multi_blocked_ips_callback', 'wp-multi-security', 'wp_multi_honeypot_section');
+}
+
+add_action('admin_init', 'wp_multi_register_security_settings');
+
+function wp_multi_honeypot_field_callback() {
+    ?>
+    <div class="wp-multi-honeypot-group">
+        <input type="text" id="wp_multi_honeypot_field" name="wp_multi_honeypot_field" value="<?php echo esc_attr(get_option('wp_multi_honeypot_field')); ?>">
+        <button type="button" onclick="generateHoneypotName()">Generieren</button>
+    </div>
+    <small>Verwenden Sie ein zufälliges Zeichenfolgen für das Honeypot-Feld.</small>
+    <?php
+}
+
+function wp_multi_honeypot_error_callback() {
+    ?>
+    <input type="text" name="wp_multi_honeypot_error" value="<?php echo esc_attr(get_option('wp_multi_honeypot_error')); ?>">
+    <small>Die Nachricht, die angezeigt wird, wenn ein Honeypot ausgelöst wird.</small>
+    <?php
+}
+
+function wp_multi_honeypot_widget_callback() {
+    ?>
+    <input type="checkbox" name="wp_multi_honeypot_widget" value="1" <?php checked(1, get_option('wp_multi_honeypot_widget'), true); ?>>
+    <small>Deaktivieren Sie das Honeypot-Test-Widget im Frontend.</small>
+    <?php
+}
+
+function wp_multi_max_links_callback() {
+    ?>
+    <input type="number" name="wp_multi_max_links" value="<?php echo esc_attr(get_option('wp_multi_max_links')); ?>">
+    <small>Maximale Anzahl von Links, die in einem Kommentar erlaubt sind.</small>
+    <?php
+}
+
+function wp_multi_blocked_keywords_callback() {
+    ?>
+    <input type="text" name="wp_multi_blocked_keywords" value="<?php echo esc_attr(get_option('wp_multi_blocked_keywords')); ?>">
+    <small>Schlüsselwörter, die blockiert werden sollen (durch Kommas getrennt).</small>
+    <?php
+}
+
+function wp_multi_blocked_ips_callback() {
+    ?>
+    <textarea name="wp_multi_blocked_ips" rows="5"><?php echo esc_textarea(get_option('wp_multi_blocked_ips')); ?></textarea>
+    <small>Blockierte IP-Adressen (jede Adresse in einer neuen Zeile).</small>
+    <?php
+}
+
+
 
 
 /*
@@ -60,26 +979,38 @@ function wp_multi_log_failed_login($username) {
         );
     }
 
-    // Wenn die Anzahl der Versuche größer als 5 ist, blockiere die IP und sende E-Mails
+    // Zähler für E-Mails und Versuche (maximal 3 E-Mails)
+    $max_attempts = 3;
+
+    // Wenn die Anzahl der Versuche größer oder gleich 5 ist, blockiere die IP und sende E-Mails
     if ($row && $row->attempts >= 5) {
-        // E-Mail an den betroffenen Benutzer senden (falls der Benutzer existiert)
-        if ($user) {
+        // Prüfen, ob bereits mehr als 3 E-Mails versendet wurden
+        $email_sent = get_option('failed_login_email_sent_' . $ip, 0);
+
+        if ($email_sent < $max_attempts) {
+            // E-Mail an den betroffenen Benutzer senden (falls der Benutzer existiert)
+            if ($user) {
+                wp_mail(
+                    $user->user_email,
+                    'Deine IP-Adresse wurde gesperrt',
+                    'Hallo ' . $user->user_login . ',\n\nDeine IP-Adresse wurde aufgrund zu vieler fehlgeschlagener Anmeldeversuche gesperrt. Bitte kontaktiere den Administrator, falls du Unterstützung benötigst.',
+                    array('Content-Type: text/plain; charset=UTF-8')
+                );
+                // Zähler erhöhen
+                update_option('failed_login_email_sent_' . $ip, $email_sent + 1);
+            }
+
+            // E-Mail an den Administrator senden
+            $admin_email = get_option('admin_email');
             wp_mail(
-                $user->user_email,
-                'Deine IP-Adresse wurde gesperrt',
-                'Hallo ' . $user->user_login . ',\n\nDeine IP-Adresse wurde aufgrund zu vieler fehlgeschlagener Anmeldeversuche gesperrt. Bitte kontaktiere den Administrator, falls du Unterstützung benötigst.',
+                $admin_email,
+                'Brute-Force-Angriff erkannt',
+                'Es wurde ein Brute-Force-Angriff auf deine WordPress-Seite erkannt. Die IP-Adresse ' . $ip . ' wurde nach mehreren fehlgeschlagenen Anmeldeversuchen blockiert.',
                 array('Content-Type: text/plain; charset=UTF-8')
             );
+            // Zähler erhöhen
+            update_option('failed_login_email_sent_' . $ip, $email_sent + 1);
         }
-
-        // E-Mail an den Administrator senden
-        $admin_email = get_option('admin_email');
-        wp_mail(
-            $admin_email,
-            'Brute-Force-Angriff erkannt',
-            'Es wurde ein Brute-Force-Angriff auf deine WordPress-Seite erkannt. Die IP-Adresse ' . $ip . ' wurde nach mehreren fehlgeschlagenen Anmeldeversuchen blockiert.',
-            array('Content-Type: text/plain; charset=UTF-8')
-        );
 
         // Benutzer sperren und eine Fehlermeldung anzeigen
         wp_die("Deine IP-Adresse wurde aufgrund zu vieler Fehlversuche gesperrt. Bitte versuche es später noch einmal.");
@@ -117,12 +1048,12 @@ function wp_multi_create_blocked_ips_table() {
 // Diese Funktion wird beim Aktivieren des Plugins aufgerufen
 register_activation_hook(__FILE__, 'wp_multi_create_blocked_ips_table');
 
-// Admin-Menüeintrag für die Übersicht der blockierten IPs unter "Benutzer"
 function wp_multi_blocked_ips_menu() {
-    add_users_page(
-        'Blockierte IPs', // Titel der Seite
-        'Blockierte IPs',  // Menüname
-        'manage_options',  // Berechtigung (nur Administratoren)
+    add_submenu_page(
+        'wp-multi-security',  // Übergeordnetes Menü: "Sicherheit"
+        'Blockierte IPs',     // Titel der Seite
+        'Blockierte IPs',     // Menüname
+        'manage_options',     // Berechtigung (nur Administratoren)
         'wp_multi_blocked_ips', // Slug
         'wp_multi_display_blocked_ips' // Callback-Funktion
     );
@@ -136,8 +1067,23 @@ function wp_multi_display_blocked_ips() {
     // Tabelle für blockierte IPs
     $table_name = $wpdb->prefix . 'blocked_ips';
 
-    // Hole alle blockierten IPs aus der Datenbank
-    $blocked_ips = $wpdb->get_results("SELECT * FROM $table_name ORDER BY last_attempt DESC");
+    // Berechnen des Datums vor 5 Tagen
+    $five_days_ago = date('Y-m-d H:i:s', strtotime('-5 days'));
+
+    // Berechnung der Pagination
+    $per_page = 50;
+    $page = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
+    $offset = ($page - 1) * $per_page;
+
+    // Hole alle blockierten IPs aus der Datenbank, die innerhalb der letzten 5 Tage liegen
+    $blocked_ips = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM $table_name WHERE last_attempt >= %s ORDER BY last_attempt DESC LIMIT %d OFFSET %d",
+            $five_days_ago,
+            $per_page,
+            $offset
+        )
+    );
 
     // Wenn keine blockierten IPs vorhanden sind
     if (empty($blocked_ips)) {
@@ -146,7 +1092,7 @@ function wp_multi_display_blocked_ips() {
     }
 
     // HTML-Tabelle zur Anzeige der blockierten IPs
-    echo '<h1>Blockierte IPs</h1>';
+    echo '<h1>Blockierte IPs (letzte 5 Tage)</h1>';
     echo '<table class="wp-list-table widefat fixed striped">';
     echo '<thead><tr><th>ID</th><th>IP-Adresse</th><th>Versuche</th><th>Letzter Versuch</th><th>Aktionen</th></tr></thead>';
     echo '<tbody>';
@@ -154,7 +1100,7 @@ function wp_multi_display_blocked_ips() {
     foreach ($blocked_ips as $ip) {
         echo '<tr>';
         echo '<td>' . $ip->id . '</td>';
-        echo '<td>' . $ip->ip . '</td>';  // Hier wird die IP angezeigt
+        echo '<td>' . $ip->ip . '</td>';
         echo '<td>' . $ip->attempts . '</td>';
         echo '<td>' . $ip->last_attempt . '</td>';
         echo '<td><a href="' . admin_url('admin-post.php?action=remove_blocked_ip&id=' . $ip->id) . '">Entfernen</a></td>';
@@ -163,6 +1109,29 @@ function wp_multi_display_blocked_ips() {
 
     echo '</tbody>';
     echo '</table>';
+
+    // Berechne die Gesamtzahl der blockierten IPs
+    $total_ips = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE last_attempt >= '$five_days_ago'");
+
+    // Pagination
+    $total_pages = ceil($total_ips / $per_page);
+    if ($total_pages > 1) {
+        echo '<div class="tablenav"><div class="alignleft actions">';
+        for ($i = 1; $i <= $total_pages; $i++) {
+            $class = ($i == $page) ? ' class="current"' : '';
+            echo '<a href="' . admin_url('users.php?page=wp_multi_blocked_ips&paged=' . $i) . '" ' . $class . '>' . $i . '</a> ';
+        }
+        echo '</div></div>';
+    }
+
+    // Automatische Löschung von IPs mit weniger als 10 Versuchen, die älter als 3 Tage sind
+    $three_days_ago = date('Y-m-d H:i:s', strtotime('-3 days'));
+    $wpdb->query(
+        $wpdb->prepare(
+            "DELETE FROM $table_name WHERE attempts < 10 AND last_attempt < %s",
+            $three_days_ago
+        )
+    );
 }
 
 // Funktion zum Entfernen einer blockierten IP
@@ -192,7 +1161,6 @@ add_action('admin_post_remove_blocked_ip', 'wp_multi_remove_blocked_ip');
 /*
 * Admin - Pinnwand
 */
-
 
 // Funktion zum Erstellen der Datenbanktabelle für Nachrichten
 function wp_multi_create_message_board_table() {
@@ -1469,22 +2437,79 @@ function wp_multi_update_dashboard_widget() {
 }
 add_action('wp_dashboard_setup', 'wp_multi_update_dashboard_widget');
 
-// Callback-Funktion für das Widget
-function wp_multi_update_dashboard_widget_content() {
-    // Gitea API-URL und Token
+// Cron-Job registrieren
+function wp_multi_update_schedule_check() {
+    if (!wp_next_scheduled('wp_multi_update_check_event')) {
+        // Registriere den Cron-Job, der alle 3 Minuten ausgeführt wird
+        wp_schedule_event(time(), 'three_minutes', 'wp_multi_update_check_event');
+    }
+}
+add_action('wp', 'wp_multi_update_schedule_check');
+
+// Cron-Job für Update-Überprüfung
+function wp_multi_update_check() {
+    // Gitea API-URL
     $api_url = 'https://git.viper.ipv64.net/api/v1/repos/M_Viper/wp-multi/releases';
-    $api_token = 'aad0e1d1ea382921591a144f115c1d55febb50b3';
     
     // Die Version des Plugins aus den Metadaten der Plugin-Datei holen
     $plugin_data = get_plugin_data( __FILE__ );
     $installed_version = $plugin_data['Version']; // Die installierte Version aus den Plugin-Metadaten
 
-    // Gitea API-Anfrage für die neuesten Releases
-    $response = wp_remote_get($api_url, array(
-        'headers' => array(
-            'Authorization' => 'token ' . $api_token
-        )
-    ));
+    // Hole die Einstellung, ob PreRelease-Versionen angezeigt werden sollen
+    $show_prereleases = get_option('wp_multi_update_show_prereleases', false);
+
+    // Gitea API-Anfrage für die neuesten Releases ohne Authentifizierung
+    $response = wp_remote_get($api_url);
+
+    if (is_wp_error($response)) {
+        return; // Fehler nicht weitergeben, aber nichts tun
+    }
+
+    // API-Antwort verarbeiten
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    // Finde das neueste, gültige Release (nicht PreRelease, falls deaktiviert)
+    $valid_release = null;
+    foreach ($data as $release) {
+        // Wenn PreRelease deaktiviert ist, überspringe alle PreRelease-Versionen
+        if (!$show_prereleases && isset($release['prerelease']) && $release['prerelease']) {
+            continue;
+        }
+
+        if (!empty($release['tag_name'])) {
+            $valid_release = $release;
+            break; // Nur das erste gültige Release verwenden
+        }
+    }
+
+    if ($valid_release) {
+        $latest_version = $valid_release['tag_name'];
+        $release_notes = isset($valid_release['body']) ? $valid_release['body'] : '';
+        $is_prerelease = isset($valid_release['prerelease']) && $valid_release['prerelease'];
+
+        // Speichern von Release-Daten
+        update_option('wp_multi_update_latest_version', $latest_version);
+        update_option('wp_multi_update_release_notes', $release_notes);
+        update_option('wp_multi_update_is_prerelease', $is_prerelease);
+    }
+}
+add_action('wp_multi_update_check_event', 'wp_multi_update_check');
+
+// Callback-Funktion für das Widget
+function wp_multi_update_dashboard_widget_content() {
+    // Gitea API-URL
+    $api_url = 'https://git.viper.ipv64.net/api/v1/repos/M_Viper/wp-multi/releases';
+    
+    // Die Version des Plugins aus den Metadaten der Plugin-Datei holen
+    $plugin_data = get_plugin_data( __FILE__ );
+    $installed_version = $plugin_data['Version']; // Die installierte Version aus den Plugin-Metadaten
+
+    // Hole die Einstellung, ob PreRelease-Versionen angezeigt werden sollen
+    $show_prereleases = get_option('wp_multi_update_show_prereleases', false);
+
+    // Gitea API-Anfrage für die neuesten Releases ohne Authentifizierung
+    $response = wp_remote_get($api_url);
 
     if (is_wp_error($response)) {
         echo 'Fehler beim Abrufen der Versionsinformationen von Gitea.';
@@ -1494,11 +2519,27 @@ function wp_multi_update_dashboard_widget_content() {
     // API-Antwort verarbeiten
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body, true);
-    
-    if (!empty($data) && isset($data[0]['tag_name'])) {
-        $latest_version = $data[0]['tag_name']; // Neuste Version von Gitea
 
-        // Vergleiche die installierte Version mit der neuesten Version
+    // Finde das neueste, gültige Release (nicht PreRelease, falls deaktiviert)
+    $valid_release = null;
+    foreach ($data as $release) {
+        // Wenn PreRelease deaktiviert ist, überspringe alle PreRelease-Versionen
+        if (!$show_prereleases && isset($release['prerelease']) && $release['prerelease']) {
+            continue;
+        }
+
+        if (!empty($release['tag_name'])) {
+            $valid_release = $release;
+            break; // Nur das erste gültige Release verwenden
+        }
+    }
+
+    if ($valid_release) {
+        $latest_version = $valid_release['tag_name'];
+        $release_notes = isset($valid_release['body']) ? $valid_release['body'] : '';
+        $is_prerelease = isset($valid_release['prerelease']) && $valid_release['prerelease'];
+
+        // Anzeige der Versionen und Text basierend auf PreRelease
         if (version_compare($installed_version, $latest_version, '>=')) {
             // Wenn die installierte Version gleich oder neuer ist als die Version in Gitea
             echo '<p style="color: green;">Ihre Version ist aktuell. Version ' . $installed_version . ' ist die neueste Version.</p>';
@@ -1507,11 +2548,52 @@ function wp_multi_update_dashboard_widget_content() {
             echo '<p style="color: red;">Es ist eine neue Version von WP Multi verfügbar! <strong>Version ' . $latest_version . '</strong> ist jetzt verfügbar.</p>';
             echo '<p>Aktuell installierte Version: <strong>' . $installed_version . '</strong></p>';
             echo '<p>Neue Version auf Gitea: <strong>' . $latest_version . '</strong></p>';
-            echo '<p><a href="' . esc_url($data[0]['assets'][0]['browser_download_url']) . '" class="button button-primary" target="_blank">Update herunterladen</a></p>';
+
+            // PreRelease in blauer Schrift anzeigen, wenn erlaubt und das Update ein PreRelease ist
+            if ($is_prerelease && $show_prereleases) {
+                echo '<p style="color: blue;">Dieses Update ist ein PreRelease.</p>';
+            }
+
+            // Verfassen-Text anzeigen, falls verfügbar
+            if (!empty($release_notes)) {
+                echo '<p><strong>Information zum Update:</strong></p>';
+                echo '<p>' . nl2br(esc_html($release_notes)) . '</p>';
+            }
+
+            // Button-Text anpassen je nachdem, ob es ein PreRelease ist
+            $button_text = $is_prerelease ? 'PreRelease herunterladen' : 'Update herunterladen';
+            $download_url = $valid_release['assets'][0]['browser_download_url'];
+            echo '<p><a href="' . esc_url($download_url) . '" class="button button-primary" target="_blank">' . esc_html($button_text) . '</a></p>';
         }
     } else {
         echo 'Fehler beim Abrufen der neuesten Version von Gitea.';
     }
+}
+
+// Benutzerdefinierte Intervalle für Cron hinzufügen
+function wp_multi_update_custom_intervals($schedules) {
+    // 3 Minuten Intervall hinzufügen
+    $schedules['three_minutes'] = array(
+        'interval' => 180,  // Alle 3 Minuten
+        'display'  => __('Alle 3 Minuten'),
+    );
+    return $schedules;
+}
+add_filter('cron_schedules', 'wp_multi_update_custom_intervals');
+
+// PreRelease Option in den Einstellungen hinzufügen
+function wp_multi_update_register_settings() {
+    add_option('wp_multi_update_show_prereleases', false);
+    register_setting('general', 'wp_multi_update_show_prereleases');
+    add_settings_field('wp_multi_update_show_prereleases', 'Pre-Release-Versionen anzeigen', 'wp_multi_update_show_prereleases_field', 'general');
+}
+add_action('admin_init', 'wp_multi_update_register_settings');
+
+// Einstellung für PreRelease-Versionen
+function wp_multi_update_show_prereleases_field() {
+    $value = get_option('wp_multi_update_show_prereleases', false);
+    echo '<input type="checkbox" id="wp_multi_update_show_prereleases" name="wp_multi_update_show_prereleases" value="1" ' . checked(1, $value, false) . ' />';
+    echo '<p class="description" style="color: red;">Aktiviere diese Option, um Pre-Release-Versionen anzuzeigen, die noch nicht vollständig veröffentlicht wurden. Deaktiviere die Option, um nur stabile Versionen anzuzeigen.</p>';
 }
 
 
@@ -1524,33 +2606,33 @@ function wp_multi_update_dashboard_widget_content() {
 function wp_multi_menu() {
     // Menüpunkt für "Notify"
     add_menu_page(
-        'Notify',           // Titel der Seite
-        'Notify',           // Name des Menüeintrags
-        'manage_options',   // Berechtigungen
-        'wp-multi-notify',  // Slug der Seite
-        'wp_multi_notify_page',  // Callback-Funktion für die Hauptseite
-        'dashicons-bell',   // Icon für den Menüpunkt
-        100                 // Position im Menü
+        'Notify',           
+        'Notify',           
+        'manage_options',   
+        'wp-multi-notify',  
+        'wp_multi_notify_page',  
+        'dashicons-bell',   
+        100                 
     );
 
     // Untermenüpunkt für DC-Notify
     add_submenu_page(
-        'wp-multi-notify',             // Slug des übergeordneten Menüs
-        'DC-Notify Einstellungen',     // Titel der Seite
-        'DC-Notify',                   // Name des Menüeintrags
-        'manage_options',              // Berechtigungen
-        'wp-multi',                    // Slug der Seite
-        'wp_multi_settings_page'       // Callback-Funktion für die Seite
+        'wp-multi-notify',             
+        'DC-Notify Einstellungen',     
+        'DC-Notify',                   
+        'manage_options',              
+        'wp-multi',                    
+        'wp_multi_settings_page'       
     );
 
     // Untermenüpunkt für TG-Notify
     add_submenu_page(
-        'wp-multi-notify',             // Slug des übergeordneten Menüs
-        'TG-Notify Einstellungen',     // Titel der Seite
-        'TG-Notify',                   // Name des Menüeintrags
-        'manage_options',              // Berechtigungen
-        'tg-notify',                   // Slug der Seite
-        'tg_notify_page'               // Callback-Funktion für die Seite
+        'wp-multi-notify',             
+        'TG-Notify Einstellungen',     
+        'TG-Notify',                   
+        'manage_options',              
+        'tg-notify',                   
+        'tg_notify_page'               
     );
 }
 add_action('admin_menu', 'wp_multi_menu');
@@ -1746,11 +2828,11 @@ function wp_multi_settings_page() {
     <style>
         /* CSS nur für die Einstellungsseite */
         .wp-multi-settings-header {
-            background-color: #0073aa; /* Dunkelblau */
-            padding: 50px 20px; /* Genug Platz für das Logo */
+            background-color: #0073aa; 
+            padding: 50px 20px; 
             text-align: center;
             position: relative;
-            margin-bottom: 30px; /* Abstand zum Formular */
+            margin-bottom: 30px; 
         }
 
         .wp-multi-settings-header::before {
@@ -1760,7 +2842,7 @@ function wp_multi_settings_page() {
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #0073aa; /* Hintergrundfarbe für das Banner */
+            background-color: #0073aa; 
             z-index: -1;
         }
 
@@ -1853,7 +2935,7 @@ function wp_multi_send_discord_notification($ID, $post) {
 
     // Textvorschau (die ersten 5 Zeilen des Beitrags)
     $content = get_post_field('post_content', $ID);
-    $excerpt = wp_trim_words($content, 60, '...');  // Verwende die ersten 60 Wörter, um eine Vorschau zu erzeug
+    $excerpt = wp_trim_words($content, 60, '...');  
 
     // Benutzerrolle anpingen (optional)
     $role_id = get_option('wp_multi_discord_role_id');
@@ -1922,7 +3004,7 @@ function wp_multi_add_checkbox_to_sidebar() {
     wp_nonce_field('wp_multi_checkbox_nonce', 'wp_multi_checkbox_nonce_field');
 
     // Immer aktivieren (setze den Wert der Checkbox immer auf '1')
-    $value = '1'; // Die Checkbox ist immer aktiviert
+    $value = '1'; 
     
     // Checkbox im Sidebar Bereich (Veröffentlichen) anzeigen
     ?>
@@ -1961,9 +3043,9 @@ $response = wp_remote_post($webhook_url, [
 
 if (is_wp_error($response)) {
     $error_message = $response->get_error_message();
-    error_log('Discord Webhook Fehler: ' . $error_message); // Fehler im Log
+    error_log('Discord Webhook Fehler: ' . $error_message); 
 } else {
-    error_log('Webhook gesendet: ' . print_r($response, true)); // Erfolg im Log
+    error_log('Webhook gesendet: ' . print_r($response, true)); 
 }
 
 
@@ -2117,7 +3199,7 @@ function tg_notify_save_post($post_id) {
 
     if ($send_notification) {
         tg_notify_send_telegram_message($post_id);
-        update_post_meta($post_id, '_tg_notify_sent', 1); // Speichern, dass die Nachricht gesendet wurde
+        update_post_meta($post_id, '_tg_notify_sent', 1); 
     }
 }
 
@@ -2151,16 +3233,16 @@ function tg_notify_send_telegram_message($post_id) {
             if (strpos($chat_id, '_') !== false) {
                 // Kanal-ID und Themen-ID trennen
                 list($channel_id, $topic_id) = explode('_', $chat_id);
-                $chat_id = $channel_id; // Nur die Kanal-ID verwenden
+                $chat_id = $channel_id; 
 
                 // Telegram API-Anfrage senden
                 $url = "https://api.telegram.org/bot$bot_token/sendMessage";
                 $args = [
                     'body' => json_encode([
                         'chat_id' => $chat_id,
-                        'text' => $message, // Nachricht ohne Themen-ID
+                        'text' => $message, 
                         'parse_mode' => 'HTML',
-                        'reply_to_message_id' => $topic_id // Antwort auf das Thema
+                        'reply_to_message_id' => $topic_id 
                     ]),
                     'headers' => ['Content-Type' => 'application/json'],
                     'method' => 'POST',
@@ -2182,7 +3264,7 @@ function tg_notify_send_telegram_message($post_id) {
                 $args = [
                     'body' => json_encode([
                         'chat_id' => $chat_id,
-                        'text' => $message, // Nachricht ohne Themen-ID
+                        'text' => $message, 
                         'parse_mode' => 'HTML'
                     ]),
                     'headers' => ['Content-Type' => 'application/json'],
@@ -2218,9 +3300,9 @@ function tg_notify_increment_telegram_message_count() {
 // Admin Dashboard Widget für Telegram und Discord Nachrichten Zähler
 function wp_multi_add_dashboard_widgets() {
     wp_add_dashboard_widget(
-        'wp_multi_dashboard_widget', // Widget-ID
-        'Telegram & Discord Nachrichten Zähler', // Widget-Titel
-        'wp_multi_display_dashboard_widget' // Callback-Funktion zur Anzeige des Inhalts
+        'wp_multi_dashboard_widget', 
+        'Telegram & Discord Nachrichten Zähler', 
+        'wp_multi_display_dashboard_widget' 
     );
 }
 add_action('wp_dashboard_setup', 'wp_multi_add_dashboard_widgets');
@@ -2249,7 +3331,7 @@ function wp_multi_add_guest_author_field() {
         'guest_author_meta_box',
         __('Gast-Autor', 'wp-multi'),
         'wp_multi_guest_author_field',
-        ['post', 'page', 'dein_custom_post_type'], // Füge hier deine Custom Post Types hinzu
+        ['post', 'page', 'dein_custom_post_type'], 
         'side',
         'high'
     );
@@ -2286,7 +3368,7 @@ add_action('save_post', 'wp_multi_save_guest_author_meta');
 
 // Gast-Autor anzeigen anstelle des regulären Autors im Frontend
 function wp_multi_display_guest_author($author_name) {
-    if ((is_single() || is_archive() || is_home()) && !is_admin()) {  // Verhindert die Anzeige im Admin-Bereich
+    if ((is_single() || is_archive() || is_home()) && !is_admin()) {  
         $post = get_post();
         if ($post) {
             // Wenn der Beitrag einen Gast-Autor hat, diesen verwenden
@@ -2326,12 +3408,12 @@ add_action('manage_posts_custom_column', 'wp_multi_display_guest_author_column',
 // Admin-Menü für die Gast-Autor-Übersicht unter Benutzer hinzufügen
 function wp_multi_add_guest_author_page() {
     add_submenu_page(
-        'users.php',  // 'Benutzer' Menü
-        __('Gast-Autor Übersicht', 'wp-multi'),     // Seiten-Titel
-        __('Gast-Autoren', 'wp-multi'),             // Menü-Titel
-        'manage_options',                          // Berechtigung
-        'guest_author_overview',                   // Slug der Seite
-        'wp_multi_guest_author_overview_page'      // Callback-Funktion
+        'users.php',  
+        __('Gast-Autor Übersicht', 'wp-multi'),     
+        __('Gast-Autoren', 'wp-multi'),             
+        'manage_options',                          
+        'guest_author_overview',                   
+        'wp_multi_guest_author_overview_page'      
     );
 }
 add_action('admin_menu', 'wp_multi_add_guest_author_page');
@@ -2522,7 +3604,7 @@ function wp_multi_custom_text_settings_page_content() {
 
         /* Banner-Stil */
         .wp-multi-banner {
-            background-color: #0073aa; /* Blaues Banner */
+            background-color: #0073aa; 
             padding: 10px;
             text-align: center;
             margin-top: 20px;
@@ -2614,7 +3696,7 @@ function wp_multi_custom_text_settings_page_content() {
 // Anzeige der Custom Texts in einer Box im Frontend mit Aktivierungsoption
 function wp_multi_custom_text_display($content) {
     // Überprüfe, ob die benutzerdefinierten Texte aktiviert sind
-    $enable_custom_texts = get_option('wp_multi_enable_custom_texts', '1'); // Standard ist aktiv
+    $enable_custom_texts = get_option('wp_multi_enable_custom_texts', '1'); 
     if ($enable_custom_texts != '1') {
         return $content; // Keine Anzeige der benutzerdefinierten Texte, wenn deaktiviert
     }
@@ -2672,11 +3754,11 @@ add_filter('the_content', 'wp_multi_custom_text_display');
 function wp_multi_add_custom_text_fields($post) {
     // Holen der benutzerdefinierten Texte aus den Einstellungen
     $custom_texts = get_option('wp_multi_custom_texts');
-    $custom_texts_array = explode("\n", $custom_texts); // Texte in ein Array umwandeln
+    $custom_texts_array = explode("\n", $custom_texts); 
 
     // Holen des zweiten benutzerdefinierten Textes aus den Einstellungen
     $second_custom_text = get_option('wp_multi_second_custom_text');
-    $second_custom_text_array = explode("\n", $second_custom_text); // Texte in ein Array umwandeln
+    $second_custom_text_array = explode("\n", $second_custom_text); 
 
     // Die aktuelle Auswahl des Custom Texts
     $selected_custom_text = get_post_meta($post->ID, '_custom_text_choice', true);
@@ -2732,13 +3814,13 @@ function wp_stat_notice_add_custom_pages() {
             if (isset($page['title']) && isset($page['url'])) {
                 // Menü hinzufügen mit WordPress Icon
                 add_menu_page(
-                    $page['title'],               // Menü-Titel
-                    $page['title'],               // Menü-Name
-                    'manage_options',             // Berechtigung
-                    $page['slug'],                // Menü-Slug
-                    'wp_stat_notice_custom_page', // Callback-Funktion
-                    $page['icon'],                // Dashicon als Icon
-                    100                            // Position (optional anpassen)
+                    $page['title'],               
+                    $page['title'],               
+                    'manage_options',             
+                    $page['slug'],                
+                    'wp_stat_notice_custom_page', 
+                    $page['icon'],                
+                    100                            
                 );
             }
         }
@@ -2858,7 +3940,7 @@ function wp_stat_notice_add_custom_page_form() {
                 'title' => $title,
                 'url' => $url,
                 'slug' => $slug,
-                'icon' => $icon, // Dashicon hinzufügen
+                'icon' => $icon, 
             ];
 
             // Option speichern
@@ -2931,7 +4013,7 @@ function wp_stat_notice_add_custom_page_form() {
                 $custom_pages[$edit_index]['title'] = sanitize_text_field($_POST['edit_page_title']);
                 $custom_pages[$edit_index]['url'] = sanitize_text_field($_POST['edit_page_url']);
                 $custom_pages[$edit_index]['slug'] = sanitize_title_with_dashes($_POST['edit_page_slug']);
-                $custom_pages[$edit_index]['icon'] = sanitize_text_field($_POST['edit_page_icon']); // Dashicon bearbeiten
+                $custom_pages[$edit_index]['icon'] = sanitize_text_field($_POST['edit_page_icon']); 
                 update_option('wp_stat_notice_custom_pages', $custom_pages);
 
                 echo '<div class="updated"><p>' . __('Seite erfolgreich bearbeitet!', 'wp-stat-notice') . '</p></div>';
@@ -2942,7 +4024,7 @@ function wp_stat_notice_add_custom_page_form() {
         if (isset($_GET['delete'])) {
             $delete_index = (int) $_GET['delete'];
             unset($custom_pages[$delete_index]);
-            $custom_pages = array_values($custom_pages); // Array neu indexieren
+            $custom_pages = array_values($custom_pages); 
             update_option('wp_stat_notice_custom_pages', $custom_pages);
 
             echo '<div class="updated"><p>' . __('Seite wurde gelöscht.', 'wp-stat-notice') . '</p></div>';
@@ -2955,7 +4037,7 @@ function wp_stat_notice_add_custom_page_form() {
     function updateIconPreview() {
         var selectedIcon = document.getElementById('page_icon').value;
         var preview = document.getElementById('icon-preview');
-        preview.className = 'dashicons ' + selectedIcon; // Füge die Dashicon-Klasse hinzu
+        preview.className = 'dashicons ' + selectedIcon; 
     }
 
     // Initiale Vorschau laden
@@ -2967,13 +4049,13 @@ function wp_stat_notice_add_custom_page_form() {
 // Seite zum Hinzufügen benutzerdefinierter Seiten unter Werkzeuge im Admin-Menü anzeigen
 function wp_stat_notice_custom_page_add_form() {
     add_submenu_page(
-        'tools.php',  // 'Werkzeuge' Menü
-        'Admin-Link hinzufügen', // Seiten-Titel
-        'Admin-Link hinzufügen', // Menü-Name
-        'manage_options',            // Berechtigung
-        'wp-stat-notice-custom-page', // Menü-Slug
-        'wp_stat_notice_add_custom_page_form', // Callback-Funktion
-        10                           // Position
+        'tools.php', 
+        'Admin-Link hinzufügen', 
+        'Admin-Link hinzufügen', 
+        'manage_options',            
+        'wp-stat-notice-custom-page', 
+        'wp_stat_notice_add_custom_page_form', 
+        10                           
     );
 }
 add_action('admin_menu', 'wp_stat_notice_custom_page_add_form');
@@ -3004,7 +4086,6 @@ function wp_stat_notice_create_reported_posts_table() {
         KEY user_id (user_id)
     ) $charset_collate;";
 
-    // Füge das Alter der Tabelle hinzu, wenn eine Spalte fehlt
     // Zuerst prüfen, ob die Spalte `name` vorhanden ist
     $columns = $wpdb->get_results("SHOW COLUMNS FROM $table_name");
 
@@ -3019,7 +4100,7 @@ function wp_stat_notice_create_reported_posts_table() {
 
     // Tabelle erstellen oder aktualisieren
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($sql);  // Diese Funktion aktualisiert die Tabelle
+    dbDelta($sql); 
 }
 
 register_activation_hook(__FILE__, 'wp_stat_notice_create_reported_posts_table');
@@ -3028,7 +4109,7 @@ register_activation_hook(__FILE__, 'wp_stat_notice_create_reported_posts_table')
 // Shortcode für den "Beitrag melden"-Button
 function wp_stat_notice_report_button($atts) {
     global $post;
-    if (!is_user_logged_in()) return ''; // Nur für angemeldete Benutzer
+    if (!is_user_logged_in()) return ''; 
 
     $atts = shortcode_atts(array('post_id' => $post->ID), $atts, 'report_button');
     $nonce = wp_create_nonce('report_post_nonce');
@@ -3099,9 +4180,9 @@ add_action('wp_head', 'wp_stat_notice_report_button_styles');
 // Dashboard-Widget hinzufügen
 function wp_stat_notice_add_dashboard_widget() {
     wp_add_dashboard_widget(
-        'wp_stat_notice_dashboard_widget', // Widget-ID
-        'Letzte 10 gemeldete Beiträge',    // Titel des Widgets
-        'wp_stat_notice_dashboard_widget_display' // Funktion, die das Widget anzeigt
+        'wp_stat_notice_dashboard_widget', 
+        'Letzte 10 gemeldete Beiträge',    
+        'wp_stat_notice_dashboard_widget_display' 
     );
 }
 add_action('wp_dashboard_setup', 'wp_stat_notice_add_dashboard_widget');
@@ -3164,7 +4245,7 @@ function wp_stat_notice_handle_report() {
             'status'      => 'reported',
             'user_id'     => $user_id
         ),
-        array('%d', '%s', '%s', '%s', '%d') // Datentypen: Integer, String, String, String, Integer
+        array('%d', '%s', '%s', '%s', '%d') 
     );
 
     if ($result === false) {
@@ -3949,7 +5030,7 @@ function statistik_manager_options_page() {
 <div class="statistik-manager-plugins">
     <h3><?php _e('Weitere Plugins', 'statistik-manager'); ?></h3>
     <ul>
-        <li><a href="https://git.viper.ipv64.net/M_Viper/wp-stat-notice">Statistik Manager</a></li>
+        <li><a href="https://git.viper.ipv64.net/M_Viper/wp-multi">WP-Multi</a></li>
         <li><a href="https://git.viper.ipv64.net/M_Viper/wordpress-top-3">Top 3 Beiträge</a></li>
     </ul>
 </div>
