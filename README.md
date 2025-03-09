@@ -1,164 +1,159 @@
-# WP-Multi Plugin
+# WP-Multi Plugin für WordPress
 
-Das **WP-Multi** Plugin für WordPress bietet eine leistungsstarke Sammlung von Funktionen, die speziell entwickelt wurden, um die Verwaltung und Personalisierung deiner Website zu verbessern. Mit diesem Plugin kannst du eine Vielzahl von Statistiken wie die Gesamtzahl von Beiträgen, Kommentaren und Kategorien auf einfache Weise anzeigen. Zudem hast du die Möglichkeit, benutzerdefinierte Banner zu erstellen, um Besucher gezielt auf wichtige Inhalte oder Aktionen hinzuweisen.
+**WP-Multi** ist ein multifunktionales WordPress-Plugin, das eine breite Palette von leistungsstarken Funktionen zur Verwaltung deiner Website bietet. Es umfasst Statistiken, benutzerdefinierte Admin-Links, Schutzmechanismen gegen Spam und Brute-Force-Angriffe, sowie viele nützliche Tools für die Verbesserung des Benutzererlebnisses und der Website-Verwaltung.
 
-WP-Multi geht darüber hinaus und ermöglicht dir die Integration von Benachrichtigungen via Telegram und Discord für neue Beiträge, die Verwaltung von Gastautoren und die Erstellung benutzerdefinierter Admin-Links. Das Plugin umfasst außerdem fortschrittliche Funktionen zur Kommentarmoderation, wie das Sperren von Benutzern und das Blockieren unerwünschter Inhalte. Alles lässt sich bequem und flexibel direkt im WordPress-Dashboard anpassen, sodass du deine Website mit wenigen Klicks noch effizienter und benutzerfreundlicher gestalten kannst.
+Das Plugin ist darauf ausgelegt, dir zu helfen, eine detaillierte Übersicht über die Interaktionen auf deiner Seite zu erhalten, Beiträge effizient zu verwalten und gleichzeitig die Sicherheit und das Benutzererlebnis zu optimieren.
 
 ## Funktionen
 
-### Beiträge
-- **Custom Textbox**:
-  - Fügt eine benutzerdefinierte Textbox am Ende eines Beitrags hinzu (z.B. für Copyright-Informationen).
+### 1. **Statistik-Übersicht**
+- **Zeigt detaillierte Statistiken an:**
+  - Anzahl der Beiträge
+  - Anzahl der Kommentare
+  - Anzahl der Kategorien
+  - Anzahl der Serien
+- **Shortcode für die Anzeige der Statistik:** `[statistik_manager]`
+
+### 2. **Benachrichtigungen auf Telegram und Discord**
+- **Telegram & Discord Benachrichtigungen:**
+  - Du erhältst Benachrichtigungen in Echtzeit über neue Beiträge auf deiner Website. So bleibst du immer auf dem Laufenden.
+  - Unterstützt sowohl Telegram als auch Discord.
+
+### 3. **Custom Admin Links**
+- **Fügt benutzerdefinierte Links im WordPress-Adminbereich hinzu:**
+  - Erstelle und verwalte eigene Links, die direkt im Admin-Dashboard angezeigt werden, um den Verwaltungsaufwand zu reduzieren und deine Arbeit zu optimieren.
+
+### 4. **Gast-Autor**
+- **Gast-Autor Feature:**
+  - Ermögliche es, einen Gast-Autornamen für Beiträge festzulegen. Der Name wird im Frontend des Beitrags angezeigt und dient dazu, die Quellen klar darzustellen.
   
-### Sidebar
-- **Pinwand**:
-  - Ermöglicht das Teilen von Informationen im Admin-Bereich, um wichtige Mitteilungen oder Nachrichten direkt an Administratoren und Benutzer zu senden.
-  
-- **Custom Shortcodes**:
-  - Benutzerdefinierte Shortcodes können per Auswahl im Editor eingefügt werden.
-  
-- **Beitrags Report**:
-  - Nutzer können Beiträge melden.
-  - Verfügbar über den Shortcode: `[report_button]`, um es in Widgets oder direkt in Beiträge einzufügen.
+### 5. **Beitrags-Report**
+- **Melden unangemessener oder falscher Beiträge:**
+  - Benutzer können Beiträge melden, die unangemessen oder fehlerhaft sind. Du erhältst eine Benachrichtigung im Admin-Panel und kannst sofort handeln.
+  - Der Admin kann alle gemeldeten Beiträge im Adminbereich einsehen und gegebenenfalls Maßnahmen ergreifen.
 
-### Kommentare
-- **Kommentar Filter**:
-  - Blockiert Schimpfwörter, Telefonnummern, E-Mail-Adressen und URLs in Kommentaren.
+### 6. **Custom Textbox**
+- **Fügt benutzerdefinierte Textboxen hinzu:**
+  - Erstelle Textboxen mit vordefinierten Inhalten, die in jedem Beitrag angezeigt werden.
+  - Diese Textboxen können leicht im Admin-Panel konfiguriert werden.
 
-### Benutzer
-- **Blockierte IPs**:
-  - Zeigt alle blockierten IPs an und ermöglicht das Verwalten dieser.
+### 7. **Banner für Nachrichten**
+- **Banner für Ankündigungen und Informationen:**
+  - Zeige wichtige Nachrichten als Banner im Frontend deiner Website an. Die Banner können entweder im Header oder im Footer angezeigt werden.
 
-- **Benutzer Analytics**:
-  - Zeigt eine Übersicht über die Benutzeraktivitäten, z.B. die Anzahl der Kommentare eines Benutzers.
+### 8. **Admin Dashboard Update Anzeige**
+- **Plugin-Update Benachrichtigung im Admin-Dashboard:**
+  - Zeigt im Admin-Dashboard an, ob eine neue Version von **WP-Multi** verfügbar ist und ob ein Update notwendig ist.
 
-- **Benutzer sperren**:
-  - Sperrt Benutzer anhand von Namen, E-Mail-Adresse oder IP-Adresse für Kommentare.
+### 9. **Gast Lesezeichen**
+- **Lesezeichen für Gäste:**
+  - Gäste können Beiträge mit einem Lesezeichen versehen, das über Cookies gespeichert wird.
+  - **Shortcodes:**
+    - `[add_bookmark]` – Fügt ein Lesezeichen hinzu.
+    - `[display_bookmarks]` – Zeigt alle Lesezeichen des Besuchers an.
 
-- **GastAutoren**:
-  - Ermöglicht es, den Namen des Gastautors anzugeben, der im Frontend angezeigt wird.
-  - Verfolgt, wie viele Beiträge jeder Gastautor verfasst hat.
+### 10. **Benutzer für Kommentare sperren**
+- **Verhindert störende Kommentare:**
+  - Sperre bestimmte Benutzer vom Kommentieren, indem du ihren Benutzernamen, ihre IP-Adresse oder E-Mail-Adresse eingibst. Diese Benutzer können dann keine weiteren Kommentare abgeben.
 
-### WP Stats & Notice
-- **Statistik anzeigen**:
-  - Zeigt Statistiken über die Gesamtzahl der veröffentlichten Beiträge, Kommentare, Kategorien und Serien (falls eine benutzerdefinierte Taxonomie für Serien existiert).
-  - Verfügbar über den Shortcode: `[statistik_manager]`.
-  
-- **Banner für Hinweise oder Nachrichten**:
-  - Ermöglicht das Hinzufügen eines anpassbaren Banners auf der Website.
-  - Nutze es für Neuigkeiten, Angebote oder andere wichtige Inhalte.
-  - Anpassbare Textfarbe, Hintergrundfarbe und Position des Banners.
+### 11. **Kommentar Filter**
+- **Automatischer Filter für schadhafte Inhalte:**
+  - Verhindert das Senden von bestimmten Informationen in Kommentaren wie:
+    - Rufnummern
+    - E-Mail-Adressen
+    - URLs
+    - IP-Adressen
+    - Schimpfwörtern
+  - Diese Elemente werden automatisch durch `*` ersetzt, wenn sie gesendet werden.
 
-### Werkzeuge
-- **Admin Links**:
-  - Ermöglicht das Hinzufügen benutzerdefinierter Links im WordPress-Adminbereich.
-  - Sowohl interne als auch externe Links können hinzugefügt werden.
+### 12. **Custom Shortcodes**
+- **Erstellung benutzerdefinierter Shortcodes:**
+  - Du kannst benutzerdefinierte Shortcodes erstellen, die im WordPress-Editor per Auswahl eingefügt werden können, um die Flexibilität und Funktionalität deiner Seite zu erweitern.
 
-### Notify
-- **Telegram Benachrichtigung bei neuem Beitrag**:
-  - Sendet eine Benachrichtigung an Telegram, wenn ein neuer Beitrag veröffentlicht wird.
+### 13. **Besucher Analytics**
+- **Verfolge die beliebtesten Beiträge:**
+  - Sieh dir an, welche Beiträge am häufigsten angesehen oder kommentiert werden.
+  - Es wird angezeigt:
+    - Art der Aktion (View oder Comment)
+    - Titel des Beitrags
+    - Beitrag-ID
+    - Zeitstempel der Aktion
 
-- **Discord Benachrichtigung bei neuem Beitrag**:
-  - Sendet eine Benachrichtigung an Discord, wenn ein neuer Beitrag veröffentlicht wird.
+### 14. **Pinwand für Administratoren**
+- **Nachrichten und Ankündigungen für Administratoren:**
+  - Erstelle, bearbeite und lösche Nachrichten auf der Pinwand im Admin-Panel. Diese Nachrichten können für andere Administratoren und Benutzer sichtbar sein.
 
-### Sicherheit
-- **Schutz vor Brute-Force-Angriffen**:
-  - Bietet Schutzmechanismen, die gegen Brute-Force-Angriffe auf deine Login-Seite vorgehen, um die Sicherheit deiner Website zu erhöhen.
+### 15. **Schutz vor Brute-Force-Angriffen**
+- **Sperrung nach Fehlversuchen:**
+  - Alle fehlgeschlagenen Login-Versuche werden protokolliert. Nach fünf fehlgeschlagenen Versuchen wird der Account automatisch gesperrt und eine E-Mail-Benachrichtigung an den Administrator und den betroffenen Benutzer gesendet.
 
-- **Besucher Analytics**:
-  - Zeigt die meistbesuchten Beiträge auf der Website an, sodass du Einblicke in die beliebtesten Inhalte bekommst.
+### 16. **Anti-Spam Honey**
+- **Automatischer Spam-Schutz:**
+  - Das Plugin erkennt Spam, Bots und andere unerwünschte Aktivitäten und blockiert diese automatisch.
+  - Eine detaillierte Übersicht über blockierte Inhalte wird im Admin-Panel bereitgestellt.
+
+### 17. **Auto Tagging**
+- **Automatisches Hinzufügen von Tags:**
+  - Wenn ein Beitrag keine Tags hat, fügt das Plugin automatisch relevante Tags hinzu.
+  - Du kannst im Admin-Panel eine Liste von unerwünschten Tags definieren, die das Plugin niemals hinzufügen soll.
+
+### 18. **Login Deaktivieren**
+- **Deaktiviere das Login für bestimmte Benutzer:**
+  - Du kannst das Login für bestimmte Benutzer deaktivieren, um unbefugten Zugriff zu verhindern. Diese Funktion kann direkt im Benutzerprofil aktiviert werden.
+
+### 19. **Text Copy Schutz**
+- **Schutz vor unerlaubtem Kopieren:**
+  - Verhindert das Kopieren von Texten auf deiner Website, um die Inhalte zu schützen.
+
+### 20. **Sperre Trash-Mail-Adressen**
+- **Blockiere Trash-Mail-Adressen in Kommentaren:**
+  - Trash-Mail-Adressen werden in Kommentaren blockiert. Die Liste der blockierten Domains kann nur vom Entwickler des Plugins erweitert werden.
+
+### 21. **Inhaltsverzeichnis für Beiträge**
+- **Erstelle ein Inhaltsverzeichnis für Beiträge:**
+  - Erstelle automatisch ein alphabetisches Inhaltsverzeichnis aller Beiträge auf deiner Website.
+  - **Shortcode:** `[alphabetical_index]`
+
+---
 
 ## Installation
 
-1. Lade das Plugin herunter und entpacke die ZIP-Datei.
-2. Gehe in deinem WordPress-Dashboard zu **Plugins** > **Installieren** > **Plugin hochladen**.
-3. Wähle die entpackte ZIP-Datei aus und klicke auf **Jetzt installieren**.
-4. Aktiviere das Plugin nach der Installation.
+### Schritt 1: Plugin herunterladen
+Lade das **WP-Multi Plugin** als ZIP-Datei von GitHub oder deinem bevorzugten Source-Repository herunter.
+
+### Schritt 2: Plugin installieren
+1. Gehe in deinem WordPress-Adminbereich zu **Plugins** > **Installieren**.
+2. Klicke auf **Plugin hochladen** und wähle die ZIP-Datei des Plugins aus.
+3. Klicke auf **Jetzt installieren** und dann auf **Aktivieren**.
+
+### Schritt 3: Plugin konfigurieren
+Nach der Aktivierung kannst du das Plugin über das **WP-Multi** Menü im Adminbereich konfigurieren. Passe die Einstellungen nach deinen Bedürfnissen an, um alle Funktionen optimal zu nutzen.
+
+---
 
 ## Verwendung
 
-### Statistiken anzeigen
+Nach der Installation kannst du die Funktionen und Shortcodes im Adminbereich oder direkt in deinen Beiträgen verwenden. Hier sind einige nützliche Shortcodes:
 
-Um die Statistiken auf deiner Seite anzuzeigen, füge einfach den folgenden Shortcode in den Inhalt einer Seite oder eines Beitrags ein:
+- **Statistik anzeigen:** `[statistik_manager]`
+- **Lesezeichen hinzufügen:** `[add_bookmark]`
+- **Lesezeichen anzeigen:** `[display_bookmarks]`
+- **Inhaltsverzeichnis anzeigen:** `[alphabetical_index]`
 
-`[statistik_manager]`
+Im Adminbereich kannst du auch die benutzerdefinierten Funktionen wie die Textboxen, Kommentar-Filter und Anti-Spam-Maßnahmen konfigurieren.
 
-Dieser Shortcode zeigt die verschiedenen Statistiken an, die im Admin-Bereich konfiguriert wurden.
-
-### Banner anzeigen
-
-Das Banner kann im Admin-Bereich konfiguriert werden und wird dann automatisch auf der Website angezeigt, basierend auf den konfigurierten Einstellungen.
-
-### Eröffnungsdatum anzeigen
-
-Im Admin-Bereich kannst du das Eröffnungsdatum deiner Website angeben. Wenn ein Datum eingetragen wurde, wird es zusammen mit der Statistik angezeigt. Falls kein Datum eingetragen ist, wird es nicht angezeigt.
-
-### Beitrags Report anzeigen
-
-Um den Report-Button in einem Beitrag oder Widget anzuzeigen, füge den Shortcode `[report_button]` an der gewünschten Stelle ein.
-
-## Einstellungen
-
-1. Gehe im WordPress-Dashboard zu **WP Stat & Notice** > **Einstellungen**.
-2. Konfiguriere die gewünschten Optionen:
-   - Statistiken (Beiträge, Kommentare, Kategorien, Serien)
-   - Banner-Einstellungen (Text, Farben, Position)
-   - Telegram und Discord Benachrichtigungen aktivieren
-   - GastAutoren Einstellungen
-   - Kommentar Sperren und Filter-Einstellungen
-   - Besucher Analytics
-   - Pinwand
-   - Brute-Force-Schutz
-
-## Optionen
-
-### WP Stats & Notice
-- **Beiträge anzeigen**: Zeigt die Gesamtzahl der veröffentlichten Beiträge.
-- **Kommentare anzeigen**: Zeigt die Gesamtzahl der Kommentare.
-- **Kategorien anzeigen**: Zeigt die Anzahl der Kategorien (oder nur die ausgewählten Kategorien).
-- **Serien anzeigen**: Zeigt die Anzahl der Serien an (falls diese Taxonomie in deiner WordPress-Installation vorhanden ist).
-- **Banner anzeigen**: Ermöglicht das Anzeigen eines anpassbaren Banners auf der Website.
-- **Eröffnungsdatum der Webseite**: Ermöglicht das Hinzufügen eines Eröffnungsdatums, das unter den Statistiken angezeigt wird.
-
-### Kommentare
-- **Kommentar Filter**: Blockiert Schimpfwörter, URLs, E-Mail-Adressen und Telefonnummern.
-
-### Benutzer
-- **Blockierte IPs**: Zeigt blockierte IPs an und ermöglicht die Verwaltung dieser.
-- **GastAutoren**: Zeigt die Anzahl der Beiträge eines Gastautors an.
-- **Kommentar Sperren**: Sperrt Kommentare von bestimmten Nutzern basierend auf Namen, E-Mail-Adresse oder IP.
-- **Benutzer Analytics**: Zeigt eine Übersicht der Benutzeraktivitäten, z.B. die Anzahl der Kommentare eines Benutzers.
-
-### Sidebar
-- **Pinwand**: Ermöglicht das Teilen von Nachrichten im Admin-Bereich.
-- **Custom Shortcodes**: Benutzerdefinierte Shortcodes können im Editor eingefügt werden.
-- **Beitrags Report**: Ermöglicht das Melden von Beiträgen durch die Benutzer.
-
-### Sicherheit
-- **Schutz vor Brute-Force-Angriffen**: Aktiviert Sicherheitsmaßnahmen gegen Brute-Force-Angriffe.
-
-### Notify
-- **Telegram Benachrichtigung**: Sende Benachrichtigungen an Telegram bei neuen Beiträgen.
-- **Discord Benachrichtigung**: Sende Benachrichtigungen an Discord bei neuen Beiträgen.
-
-## Screenshots
-
-1. **Dashboard Ansicht** – Die Statistiken werden im Admin-Bereich angezeigt.
-2. **Frontend Anzeige** – Die Statistiken und das Banner werden auf der Webseite angezeigt, wenn der Shortcode verwendet wird.
-3. **Eröffnungsdatum** – Zeigt das Eröffnungsdatum der Webseite unter den Statistiken an, falls angegeben.
-4. **Beitrags Report Button** – Zeigt den Button zum Melden von Beiträgen.
-
-## Entwickler
-
-- **Plugin Name**: WP Multi
-- **Autor**: M_Viper
-- **Website**: [https://m-viper.de](https://m-viper.de)
-- **Gitea Repository**: [https://git.viper.ipv64.net/M_Viper/wp-multi](https://git.viper.ipv64.net/M_Viper/wp-multi)
+---
 
 ## Lizenz
 
-Dieses Plugin ist unter der [GPL-2.0 Lizenz](https://www.gnu.org/licenses/gpl-2.0.html) lizenziert.
+Dieses Plugin ist unter der [GPL-2.0 Lizenz](https://www.gnu.org/licenses/old-licenses/gpl-2.0.de.html) veröffentlicht.
 
-## Contributing
+---
 
-Beiträge zum Plugin sind willkommen! Wenn du eine Idee für eine Verbesserung hast oder einen Fehler findest, kannst du einen **Issue** hier öffnen oder einen **Pull Request** einreichen.
+## Unterstützung
+
+Wenn du Fragen hast oder auf Probleme stößt, eröffne ein **Issue** auf GitHub. Wir sind gerne bereit, dir zu helfen!
+
+---
+
+Vielen Dank, dass du **WP-Multi** verwendest! Wir hoffen, dass es dir hilft, deine WordPress-Website effizient zu verwalten und zu schützen.
